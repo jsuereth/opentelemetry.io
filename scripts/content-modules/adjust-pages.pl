@@ -14,6 +14,7 @@ my $gD = 0;
 my $otelSpecRepoUrl = 'https://github.com/open-telemetry/opentelemetry-specification';
 my $otlpSpecRepoUrl = 'https://github.com/open-telemetry/opentelemetry-proto';
 my $opAmpSpecRepoUrl = 'https://github.com/open-telemetry/opamp-spec';
+my $semconvSpecRepoUrl = 'https://github.com/open-telemetry/semantic-conventions';
 my $semConvRef = "$otelSpecRepoUrl/blob/main/semantic_conventions/README.md";
 my $specBasePath = '/docs/specs';
 my $path_base_for_github_subdir = "content/en$specBasePath";
@@ -36,6 +37,20 @@ path_base_for_github_subdir:
   to: specification.md
 EOS
 
+# TODO: remove once Semconv spec has been updated
+my $semconvFrontMatter = << "EOS";
+title: OpenTelemetry Semantic Conventions
+linkTitle: Semantic Conventions
+body_class: otel-docs-spec
+github_repo: &repo $semconvSpecRepoUrl
+github_project_repo: *repo
+path_base_for_github_subdir:
+  from: content/en/docs/specs/semconv/index.md
+  to: docs/README.md
+cascade:
+-  draft: true
+EOS
+
 sub printTitleAndFrontMatter() {
   print "---\n";
   if ($title eq 'OpenTelemetry Specification') {
@@ -49,6 +64,8 @@ sub printTitleAndFrontMatter() {
     $frontMatterFromFile .= "weight: 20\n" if $frontMatterFromFile !~ /^\s*weight/;
   } elsif ($title eq 'OpAMP: Open Agent Management Protocol') {
     $frontMatterFromFile = $opampFrontMatter unless $frontMatterFromFile;
+  } elsif ($title eq 'OpenTelemetry Semantic Conventions') {
+    $frontMatterFromFile = $semconvFrontMatter unless $frontMatterFromFile;
   }
   my $titleMaybeQuoted = ($title =~ ':') ? "\"$title\"" : $title;
   print "title: $titleMaybeQuoted\n" if $frontMatterFromFile !~ /title: /;
@@ -96,6 +113,12 @@ while(<>) {
     while(<>) { last if/<!-- tocstop -->/; }
     next;
   }
+
+  # SEMCONV custom processing
+
+  s|/docs/(.*?\))|$specBasePath/semconv/$1)|g if $ARGV =~ /semconv\//;
+  s|/docs/general/general\-attributes\.md|$specBasePath/semconv/general/general-attributes.md|g if $ARGV =~ /semconv\//;
+  s|/docs/resource/README.md|$specBasePath/semconv/resource/_index.md|g if $ARGV =~ /semconv\//;
 
   # SPECIFICATION custom processing
 
